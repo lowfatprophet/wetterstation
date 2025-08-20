@@ -1,6 +1,24 @@
 # Wetterstation
 
+Die Wetterstation soll aus insgesamt drei Stationen zusammengesetzt sein:
+
+1. Die Seonsoranlage gesteuert durch einen Raspberry Pi Pico 2WH, verbunden mit einem Temperatur- und Feuchtigkeitssensor (DHT22) und ggf. mit einem Feinstaubsensor (HM3301).
+2. Ein Server, der die Daten der Sensoranlage empfängt und anschließend in einer Datenbank speichert.
+3. Eine Website, die die vom Server abgelegten Daten nach benutzerdefinierten Vorgaben sortiert ausgibt.
+
 ## Client
+
+Der Client (die Sensoranlage) nimmt die Daten aus den Sensoren auf und verschickt den Datensatz gebündelt an den Server.
+
+```json
+{
+    "datetime": "2025-08-20 12:00:00",
+    "temperature": 23.4,
+    "humidity": 45.6
+}
+```
+
+Es bieten sich zwei mögliche Programmiersprachen für den Client an: Python und Rust. Nachfolgend werden Ideen für beide Varianten exerziert.
 
 ### Python
 
@@ -14,11 +32,11 @@ Mit Python wäre man am besten mit [MicroPython](https://micropython.org) berate
 
 #### `.env`-Handling
 
-pip hat hier sicher ein passendes Modul, ein einfacher Parser ist hierfür aber auch schnell gebaut und embedded vielleicht sogar die bessere Wahl.
+`pip` hat hier sicher ein passendes Modul, ein einfacher Parser ist hierfür aber auch schnell gebaut und *embedded* vielleicht sogar die bessere Wahl.
 
 ### Rust
 
-[embassy-rp](https://docs.embassy.dev/embassy-rp/git/rp2040/index.html) scheint gut zu funktionieren. Das ist wirklich eine umfangreiche Bibliothek, die mir hoffentlich das meiste abnehmen kann.
+[`embassy-rp`](https://docs.embassy.dev/embassy-rp/git/rp2040/index.html) scheint gut zu funktionieren. Das ist wirklich eine umfangreiche Bibliothek, die mir hoffentlich das meiste abnehmen kann.
 
 ##### HAL-Operations
 
@@ -26,13 +44,13 @@ Als erstes ist der Zugriff auf grundsätzliche Chip-Funktionen notwendig (I2C (e
 
 #### DHT22
 
-Der Temperatur- und Feuchtesensor sollte eigentlich über ein standardisiertes Interface ansprechbar sein, weswegen hier auch ein Community-betreutes Paket ausreichen sollte: [embedded-dht-rs](https://github.com/rust-dd/embedded-dht-rs).
+Der Temperatur- und Feuchtesensor sollte eigentlich über ein standardisiertes Interface ansprechbar sein, weswegen hier auch ein Community-betreutes Paket ausreichen sollte: [`embedded-dht-rs`](https://github.com/rust-dd/embedded-dht-rs).
 
 Hier ist für alle Chips dieser Art Unterstützung vorhanden, außerdem ist die letzte Version verhältnismäßig jung.
 
 #### HTTP Connection
 
-Hier brauche ich noch ein Paket, das mir erlaubt, bei erfolgreich gelesenen Sensordaten eine einfache `GET`-Request abzuschicken und bei erhaltener Response im Fehlerfall kurz blau zu leuchten. [http](https://docs.rs/http/latest/http) kann das.
+Hier brauche ich noch ein Paket, das mir erlaubt, bei erfolgreich gelesenen Sensordaten eine einfache `GET`-Request abzuschicken und bei erhaltener Response im Fehlerfall kurz blau zu leuchten. [`http`](https://docs.rs/http/latest/http) kann das.
 
 #### `.env`-Handling
 
@@ -52,7 +70,7 @@ Die offensichtliche Alternative wäre womöglich dann NodeJS. Aber ob mir das so
 
 #### Development
 
-Dev-Server für FastAPI starten:
+Dev-Server für FastAPI starten (mit Flag für Zugänglichkeit im lokalen Netzwerk):
 
 ```shell
 uv run fastapi dev --host 0.0.0.0
