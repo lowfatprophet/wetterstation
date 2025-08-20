@@ -1,23 +1,42 @@
 import os
-import sys
+from datetime import datetime
+from typing import Any
 
-import mariadb
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
-load_dotenv()
+from db import DB
 
-db_config = {
-    "host": "localhost",
-    "port": 3306,
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PWD"),
-    "database": os.getenv("DB_NAME")
-}
+
+class PutData(BaseModel):
+    datetime: datetime
+    temperature: float | None
+    humidity: float | None
 
 app = FastAPI()
 
+# User cursor with db.cursor
+db = DB()
+
+load_dotenv()
+API_KEY = os.getenv("API_KEY")
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    response = db.get_data()
+    if not response:
+        raise HTTPException(status_code=404, detail="Items not found")
+    return response
+
+@app.put("/")
+def put_new_data(data: PutData) -> Any:
+    # TODO: Eine Abfrage für den API-Key einbauen, damit nicht jeder wild vor sich hin Daten einfügen kann.
+    # Als extra Header-Feld?
+    try:
+        db.set_data(data.model_dump())
+        return data.model_dump()
+    except:  # noqa: E722
+        # Das kann man wohl auch eleganter lösen
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+    

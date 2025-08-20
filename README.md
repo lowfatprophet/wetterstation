@@ -49,3 +49,11 @@ Zuerst muss ich rausfinden, wie ich mit Rust so klar komme. Da fehlt mir schon n
 Als Server habe ich mir eigentlich schon überlegt, alles in Python zu schreiben. [FastAPI](https://fastapi.tiangolo.com) sollte mir da eigentlich gute Dienste erweisen können. Gerade die CRUD-Operationen für welche Datenbank auch immer sollte damit eigentlich ein Selbstläufer sein (oder zumindest wesentlich viel einfacher).
 
 Die offensichtliche Alternative wäre womöglich dann NodeJS. Aber ob mir das so taugt, das Handling, nehme ich an, ist in Python dann doch schon ziemlich angenehm.
+
+#### Development
+
+Dev-Server für FastAPI starten:
+
+```shell
+uv run fastapi dev --host 0.0.0.0
+```
