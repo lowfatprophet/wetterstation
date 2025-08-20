@@ -60,13 +60,22 @@ class DB:
             self.conn.rollback()
 
     def get_data(
-            self, oldest: str | None = None, newest: str | None = None
+            self, oldest: datetime | None = None, newest: datetime | None = None
         ) -> dict[datetime, dict[str, float]]:
         self.connect()
         # Abrufen
         # SELECT * FROM messdaten LIMIT 3;
         select_query = f"SELECT * FROM {self.table}"
+        if oldest or newest:
+            select_query += " WHERE"
+        if oldest:
+            select_query += f" datetime >= '{oldest}'"
+        if oldest and newest:
+            select_query += " AND"
+        if newest:
+            select_query += f" datetime < '{newest}'"
         self.cursor.execute(select_query)
+        
         return {
             row[1]: {"temperature": row[2], "humidity": row[3]}
             for row in self.cursor
