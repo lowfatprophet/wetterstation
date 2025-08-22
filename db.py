@@ -16,13 +16,16 @@ DB_CONFIG = {
     "database": os.getenv("DB_NAME")
 }
 
+type DataDict = dict[str, datetime | float]
+
+type DataList = list[DataDict]
+
 class DB:
     def __init__(self):
         self.table = "messdaten"
 
         try:
             self.conn = mariadb.connect(**DB_CONFIG)
-
             self.cursor = self.conn.cursor()
         except mariadb.Error as e:
             raise e
@@ -38,33 +41,35 @@ class DB:
             return
         try:
             self.conn = mariadb.connect(**DB_CONFIG)
-
             self.cursor = self.conn.cursor()
         except mariadb.Error as e:
             raise e
         
-    def dictify(self, data):
-        return {
-            row[1]: {"temperature": row[2], "humidity": row[3]}
-            for row in data
-        }
+    def dictify(self, data) -> DataList:
+        return [
+            {
+                "datetime": row[1],
+                "temperature": row[2],
+                "humidity": row[3]
+            } for row in data
+        ]
 
     def query_builder(
-        self, column: str, a: Any | None = None, b: Any | None = None
+        self, column: str, min: Any | None = None, max: Any | None = None
     ) -> str:
         query = f"SELECT * FROM {self.table}"
-        if a or b:
+        if min or max:
             query += " WHERE"
-        if a:
-            query += f" {column} >= {a}"
-        if a and b:
+        if min:
+            query += f" {column} >= {min}"
+        if min and max:
             query += " AND"
-        if b:
-            query += f" {column} < {b}"
+        if max:
+            query += f" {column} < {max}"
 
         return query
 
-    def set_data(self, data):
+    def set_data(self, data: DataDict) -> None:
         # Einfügen
         # INSERT INTO messdaten (datetime, temperature, humidity) VALUES ('2025-08-20 12:25:00', 25.7, 41.1);
         self.connect()
@@ -84,7 +89,7 @@ class DB:
             self.conn.rollback()
             raise mariadb.Error
 
-    def get_data(self, skip: int = 0, limit: int | None = None):
+    def get_data(self, skip: int = 0, limit: int | None = None) -> DataList:
         # Abrufen
         # SELECT * FROM messdaten LIMIT 3;
         self.connect()
@@ -103,7 +108,7 @@ class DB:
 
     def get_data_by_datetime(
         self, earliest: datetime | None = None, latest: datetime | None = None
-    ) -> dict[datetime, dict[str, float]]:
+    ) -> DataList:
         self.connect()
         select_query = self.query_builder(
             "datetime",
@@ -112,19 +117,11 @@ class DB:
         )
         self.cursor.execute(select_query)
         return self.dictify(self.cursor)
-    
-    def get_data_by_temperature(
-        self, lowest: float | None = None, highest: float | None = None
-    ) -> dict[datetime, dict[str, float]]:
-        self.connect()
-        select_query = self.query_builder("temperature", lowest, highest)
-        self.cursor.execute(select_query)
-        return self.dictify(self.cursor)
 
-    def get_data_by_humidity(
-        self, lowest: float | None = None, highest: float | None = None
-    ) -> dict[datetime, dict[str, float]]:
+    def get_data_by_sensor(
+        self, column: str, lowest: float | None = None, highest: float | None = None
+    ) -> DataList:
         self.connect()
-        select_query = self.query_builder("humidity", lowest, highest)
+        select_query = self.query_builder(column, lowest, highest)
         self.cursor.execute(select_query)
         return self.dictify(self.cursor)

@@ -62,13 +62,23 @@ Es scheint aber, dass Rust hier auch [bessere Voraussetzungen](https://murraytod
 
 Zuerst muss ich rausfinden, wie ich mit Rust so klar komme. Da fehlt mir schon noch einiges. Gerade die Frage mit dem Errorhandling und optionalen Funktionsabläufen muss ich mir natürlich sehr genau anschauen, wenn ich ein System bauen will, das nicht nach einem Nachmittag in irgendeinen Fehler läuft und keine Daten mehr liefert.
 
-### Server
+## Server
 
 Als Server habe ich mir eigentlich schon überlegt, alles in Python zu schreiben. [FastAPI](https://fastapi.tiangolo.com) sollte mir da eigentlich gute Dienste erweisen können. Gerade die CRUD-Operationen für welche Datenbank auch immer sollte damit eigentlich ein Selbstläufer sein (oder zumindest wesentlich viel einfacher).
 
 Die offensichtliche Alternative wäre womöglich dann NodeJS. Aber ob mir das so taugt, das Handling, nehme ich an, ist in Python dann doch schon ziemlich angenehm.
 
-#### Development
+## Frontend
+
+Mit [ChartJS](https://www.chartjs.org) ließen sich bestimmt sehr schicke erste Darstellungen bauen. Einzig, man muss vermutlich mit React oder vielleicht Svelte arbeiten, wenn man alles schön integrieren möchte, ansonsten wirkt das arg kompliziert. Darüber hinaus sollte das aber ganz gut funktionieren. Die Daten sollten ja immerhin kein Problem sein mit der aktuellen Pipeline.
+
+Eine schöne Website ließe sich mit React auch mit [shadcn/ui](https://ui.shadcn.com/) bauen. Das sollte auch die Gestaltung in schnellen Zügen vorankommen lassen.
+
+## Development
+
+### Client
+
+### Server
 
 Dev-Server für FastAPI starten (mit Flag für Zugänglichkeit im lokalen Netzwerk):
 

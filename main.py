@@ -5,9 +5,10 @@ from typing import Annotated, Any
 import mariadb
 from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from db import DB
+from db import DB, DataList
 
 
 class PutData(BaseModel):
@@ -20,6 +21,16 @@ class PutHeader(BaseModel):
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    # scheint, als müsste hier die genaue Origin (Protokoll, Adresse,
+    # Port) angegeben werden; individuell für jeden Fall.
+    allow_origins=["http://192.168.188.173:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # User cursor with db.cursor
 db = DB()
 
@@ -30,27 +41,23 @@ API_KEY = "G3n4<6HR&usaO.s2kWj:Hyw'Bst"
 
 @app.get("/")
 def read_root(
-    sort_by: str | None = None,  # only necessary for sensor readings, not timestamps
+    skip: int = 0,
+    limit: int = 10,
     earliest: datetime | None = None,  # earliest timestamp to consider
     latest: datetime | None = None,  # latest timestamp to consider
+    sort_by: str | None = None,  # only necessary for sensor readings, not timestamps
     lowest: float | None = None,  # lowest value to consider
-    highest: float | None = None  # highest value to consider
-) -> dict[datetime, dict[str, float]]:
+    highest: float | None = None,  # highest value to consider
+) -> DataList:
     if earliest or latest:
-        response = db.get_data_by_datetime(earliest, latest)
+        data = db.get_data_by_datetime(earliest, latest)
     elif sort_by:
-        if sort_by == "temperature":
-            response = db.get_data_by_temperature(lowest, highest)
-        elif sort_by == "humidity":
-            response = db.get_data_by_humidity(lowest, highest)
+        data = db.get_data_by_sensor(sort_by, lowest, highest)
     else:
-        raise HTTPException(
-            status_code=400,
-            detail="Consider using the `sort_by` query parameter to filter by sensor data"
-        )
-    if not response:
+        data = db.get_data(skip, limit)
+    if not data:
         raise HTTPException(status_code=404, detail="Items not found")
-    return response
+    return data
 
 @app.put("/")
 def put_new_data(headers: Annotated[PutHeader, Header()], data: PutData) -> Any:
