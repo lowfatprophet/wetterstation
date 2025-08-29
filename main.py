@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated
 
 import mariadb
 from dotenv import load_dotenv
@@ -8,7 +8,7 @@ from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from db import DB, DataList
+from db import DB, DataDict, DataList
 
 
 class PutData(BaseModel):
@@ -19,13 +19,17 @@ class PutData(BaseModel):
 class PutHeader(BaseModel):
     x_authorization: str
 
+load_dotenv()
+ORIGINS = os.getenv("ORIGINS")
+API_KEY = os.getenv("API_KEY")
+
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
     # scheint, als müsste hier die genaue Origin (Protokoll, Adresse,
     # Port) angegeben werden; individuell für jeden Fall.
-    allow_origins=["http://192.168.188.173:5173"],
+    allow_origins=ORIGINS if ORIGINS else [],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,10 +38,6 @@ app.add_middleware(
 # User cursor with db.cursor
 db = DB()
 
-load_dotenv()
-API_KEY = os.getenv("API_KEY")
-# Work-around, weil das grad anders nicht funktioniert.
-API_KEY = "G3n4<6HR&usaO.s2kWj:Hyw'Bst"
 
 @app.get("/")
 def read_root(
@@ -60,7 +60,9 @@ def read_root(
     return data
 
 @app.put("/")
-def put_new_data(headers: Annotated[PutHeader, Header()], data: PutData) -> Any:
+def put_new_data(
+    headers: Annotated[PutHeader, Header()], data: PutData
+) -> DataDict:
     # TODO: Eine Abfrage für den API-Key einbauen, damit nicht jeder wild vor sich hin Daten einfügen kann.
     if not headers.x_authorization or headers.x_authorization != API_KEY:
         raise HTTPException(status_code=403, detail="Forbidden")
